@@ -25,3 +25,4 @@ export { default as searchAPI } from './search';
 export { default as driverReviewsAPI } from './driverReviews';
 export { default as vendorAPI } from './vendor';
 export { default as driverAPI } from './driver';
+export { default as imagesAPI } from './images';
