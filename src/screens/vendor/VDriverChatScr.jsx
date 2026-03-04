@@ -5,7 +5,7 @@ function VDriverChatScr({delivery:d,onBack}){
   const driverName=d.driver||d.name||"Livreur";
   const driverAv=d.driverAv||d.avatar||"🧑";
   const [msgs,setMsgs]=useState([]);
-  const [inp,setInp]=useState("");const ref=useRef(null);const [typing,setTyping]=useState(false);
+  const [inp,setInp]=useState("");const ref=useRef(null);const [typing,setTyping]=useState(false);const fileRef=useRef(null);const [viewImg,setViewImg]=useState(null);
 
   // Welcome message
   useEffect(()=>{
@@ -39,7 +39,7 @@ function VDriverChatScr({delivery:d,onBack}){
     <div className="chat-head">
       <button onClick={onBack} style={{width:36,height:36,borderRadius:10,border:"1px solid #E8E6E1",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
       <div className="ch-av" style={{background:"linear-gradient(135deg,#10B981,#059669)"}}>{driverAv}</div>
-      <div className="ch-info"><h4>{driverName}</h4><p>🟢 En livraison{d.ref?` · ${d.ref}`:""}</p></div>
+      <div className="ch-info"><h4>{driverName}</h4><p style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:"#908C82"}}><span style={{color:"#10B981",fontWeight:600}}>🟢 En ligne</span><span>·</span><span>📍 Talangaï</span><span>·</span>🟢 En livraison{d.ref?` · ${d.ref}`:""}</p></div>
       <button className="ch-call" onClick={()=>alert("📞 Appel vers "+driverName)}>📞</button>
     </div>
     <div className="chat-body" ref={ref}>
@@ -59,7 +59,7 @@ function VDriverChatScr({delivery:d,onBack}){
     <div style={{padding:"8px 16px",background:"#F5F4F1",borderTop:"1px solid #E8E6E1",display:"flex",gap:6,flexShrink:0,overflowX:"auto"}}>
       {quickReplies.map(([icon,msg])=><button key={icon} onClick={()=>sendMsg(`${icon} ${msg}`)} style={{padding:"6px 12px",borderRadius:20,border:"1px solid #E8E6E1",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:"#5E5B53",whiteSpace:"nowrap",flexShrink:0}}>{icon} {msg.length>20?msg.slice(0,18)+"…":msg}</button>)}
     </div>
-    <div className="chat-input"><button className="chat-attach">📎</button><input placeholder={`Message à ${driverName.split(" ")[0]}...`} value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()}/><button onClick={()=>sendMsg()}>➤</button></div>
+    <div className="chat-input"><button className="chat-attach" onClick={()=>fileRef.current?.click()}>📎</button><input ref={fileRef} type="file" accept="image/*,.pdf,.doc,.docx" style={{display:"none"}} onChange={handleFileUpload}/><input placeholder={`Message à ${driverName.split(" ")[0]}...`} value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()}/><button onClick={()=>sendMsg()}>➤</button></div>
   </div>);
 }
 

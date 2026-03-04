@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { VENDORS } from "../../data";
+import { useData } from "../../hooks";
 import MapView from "../../components/MapView";
 
 function NearbyScr({go,onBack}){
+  const { VENDORS } = useData();
   const [sel,setSel]=useState(VENDORS[0]);
   const markers=VENDORS.filter(v=>v.lat&&v.lng).map(v=>({
     lat:v.lat,lng:v.lng,

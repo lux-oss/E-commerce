@@ -1,9 +1,10 @@
 import { useState } from "react";
 import Img from "../../components/Img";
-import { P, CATS } from "../../data";
+import { useData } from "../../hooks";
 import { fmt, disc } from "../../utils/helpers";
 
 function SearchScr({go,onBack,fromTab,favs,toggleFav,isFav}){
+  const { P, CATS } = useData();
   const [q,setQ]=useState("");const [sc,setSC]=useState("Tous");
   const [showFilter,setShowFilter]=useState(false);
   const [sortBy,setSortBy]=useState("popular");

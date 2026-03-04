@@ -1,8 +1,9 @@
-import { P } from "../../data";
+import { useData } from "../../hooks";
 import Img from "../../components/Img";
 import { fmt } from "../../utils/helpers";
 
 function WishlistScr({go,onBack,favs,toggleFav}){
+  const { P } = useData();
   const items=P.filter(p=>favs.includes(p.id));
   return(<div className="scr" style={{padding:20}}><div className="appbar" style={{padding:0,marginBottom:16}}><button onClick={onBack}>←</button><h2>Mes favoris ({items.length})</h2><div style={{width:38}}/></div>
     {items.length===0?<div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:10}}>♡</div><h3 style={{fontSize:16,fontWeight:700}}>Aucun favori</h3><p style={{fontSize:13,color:"#908C82",marginTop:4}}>Appuyez sur ♡ pour ajouter des articles ici</p></div>

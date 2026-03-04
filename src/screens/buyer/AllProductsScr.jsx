@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { P } from "../../data";
+import { useData } from "../../hooks";
 import Img from "../../components/Img";
 import { fmt, disc } from "../../utils/helpers";
 
 function AllProductsScr({go,onBack,favs,toggleFav,isFav}){
+  const { P } = useData();
   const [sort,setSort]=useState("popular");
   const sorted=[...P].sort((a,b)=>sort==="price"?a.price-b.price:sort==="rating"?b.rating-a.rating:b.reviews-a.reviews);
   return(<div className="scr"><div className="appbar"><button onClick={onBack}>←</button><h2>Tous les articles</h2><div style={{width:38}}/></div>

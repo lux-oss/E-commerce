@@ -1,13 +1,19 @@
 import { useState } from "react";
-import { ADDRS } from "../../data";
+import { useLoad } from "../../hooks";
+import { user as userSvc } from "../../services";
+import Loading from "../../components/Loading";
 
 function AddressesScr({onBack}){
-  const [addrs,setAddrs]=useState(ADDRS.map(a=>({...a})));
+  const { data: loadedAddrs, loading } = useLoad(() => userSvc.getAddresses());
+  const [addrs,setAddrs]=useState(null);
+  const list = addrs || (loadedAddrs || []).map(a=>({...a}));
+  const setList = (fn) => setAddrs(typeof fn === 'function' ? fn(list) : fn);
   const [adding,setAdding]=useState(false);
-  const remove=id=>setAddrs(addrs.filter(a=>a.id!==id));
-  const setDefault=id=>setAddrs(addrs.map(a=>({...a,def:a.id===id})));
+  const remove=id=>setList(prev=>prev.filter(a=>a.id!==id));
+  const setDefault=id=>setList(prev=>prev.map(a=>({...a,def:a.id===id})));
+  if(loading) return <div className="scr" style={{padding:20}}><div className="appbar" style={{padding:0,marginBottom:16}}><button onClick={onBack}>←</button><h2>Mes adresses</h2><div style={{width:38}}/></div><Loading/></div>;
   return(<div className="scr" style={{padding:20}}><div className="appbar" style={{padding:0,marginBottom:16}}><button onClick={onBack}>←</button><h2>Mes adresses</h2><div style={{width:38}}/></div>
-    {addrs.map(a=><div key={a.id} className={`addr-card ${a.def?"def":""}`}>
+    {list.map(a=><div key={a.id} className={`addr-card ${a.def?"def":""}`}>
       <div className="ai">{a.def?"🏠":"🏢"}</div>
       <div className="ab"><h4>{a.label}{a.def&&<span className="def-badge">Par défaut</span>}</h4><p>{a.addr}<br/>{a.city}, Congo</p></div>
       <div style={{display:"flex",flexDirection:"column",gap:4}}>
@@ -27,7 +33,5 @@ function AddressesScr({onBack}){
     {!adding&&<button className="btn-outline" style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8}} onClick={()=>setAdding(true)}>+ Ajouter une adresse</button>}
   </div>);
 }
-
-/* ── LANGUAGE ── */
 
 export default AddressesScr;

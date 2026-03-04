@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { P } from "../../data";
+import { useData } from "../../hooks";
 import Img from "../../components/Img";
 import { fmt, disc } from "../../utils/helpers";
 
 function VendorScr({vendor:v,go,onBack}){
+  const { P } = useData();
   const [following,setFollowing]=useState(false);
   const [fCount,setFC]=useState(v.followers);
   const vp=P.filter(p=>p.vendor===v.name);

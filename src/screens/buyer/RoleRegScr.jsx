@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { CATS } from "../../data";
+import { useData } from "../../hooks";
 
 function RoleRegScr({onBack,onDone,forceRole}){
+  const { CATS } = useData();
   const [role,setRole]=useState(forceRole||null); // "vendor" | "driver"
   const [step,setStep]=useState(forceRole?0:-1);
   const [plan,setPlan]=useState("starter");

@@ -1,14 +1,10 @@
 /**
  * AppContext — État global de l'application
- * Remplace le prop drilling de App.jsx
- *
- * Usage dans un screen :
- *   import { useApp } from '../../context/AppContext';
- *   const { user, cart, go, pop } = useApp();
+ * Connecté aux services (mock/API selon VITE_USE_MOCK)
  */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api from '../api/client';
-import { authAPI, usersAPI, cartAPI, favoritesAPI, notificationsAPI } from '../api';
+import { setToken, getToken, isAuthenticated, onAuthExpired } from '../api/client';
+import { auth, cart as cartSvc, social as socialSvc } from '../services';
 
 const AppContext = createContext(null);
 
@@ -16,12 +12,11 @@ export function AppProvider({ children }) {
 
   // ── Auth ──
   const [user, setUser] = useState(null);
-  const [authStep, setAuthStep] = useState(api.isAuthenticated() ? 'loading' : 'splash');
-  // splash → onboarding → login → otp → profile → ready
+  const [authStep, setAuthStep] = useState(isAuthenticated() ? 'loading' : 'splash');
   const [socialProvider, setSocialProvider] = useState(null);
 
   // ── Navigation ──
-  const [mode, setMode] = useState('buyer'); // buyer | vendor | driver
+  const [mode, setMode] = useState('buyer');
   const [tab, setTab] = useState(0);
   const [vTab, setVTab] = useState(0);
   const [dTab, setDTab] = useState(0);
@@ -31,6 +26,24 @@ export function AppProvider({ children }) {
   // ── Cart ──
   const [cart, setCart] = useState([]);
   const [cartCount, setCartCount] = useState(0);
+
+  // normalize items returned by backend/mock so UI has consistent fields
+  const normalizeCartItem = i => {
+    const prod = i.product || {};
+    return {
+      ...i,
+      product: {
+        id: prod.id || i.article_id,
+        name: prod.name || i.name || prod.title,
+        price: prod.price ?? i.price ?? 0,
+        old: prod.old_price || prod.old || i.old || 0,
+        img: prod.img || prod.image || i.img || "",
+        photo: prod.photo || prod.image || prod.img || i.photo || null,
+        vendor: prod.vendor || i.vendor || "",
+      },
+      price: i.price || prod.price || 0,
+    };
+  };
 
   // ── Favorites ──
   const [favs, setFavs] = useState([]);
@@ -52,46 +65,45 @@ export function AppProvider({ children }) {
   }, []);
 
   // ══════════════════════════════════
-  //  BOOT — Restaurer session si token
+  //  BOOT — Restaurer session
   // ══════════════════════════════════
 
   useEffect(() => {
-    if (!api.isAuthenticated()) return;
+    if (!isAuthenticated()) return;
 
     (async () => {
       try {
-        const userData = await usersAPI.me();
+        const userData = await auth.getMe();
         setUser(userData);
         setUserRole(userData.role || 'client');
         setAuthStep('ready');
 
-        // Charger panier + favs + notifs en parallèle
         const [cartData, favsData, notifData] = await Promise.allSettled([
-          cartAPI.get(),
-          favoritesAPI.getAll(),
-          notificationsAPI.count(),
+          cartSvc.get(),
+          socialSvc.getFavorites(),
+          socialSvc.getUnreadCount(),
         ]);
 
         if (cartData.status === 'fulfilled' && cartData.value) {
-          setCart(cartData.value.items || []);
-          setCartCount(cartData.value.count || 0);
+          const items = (cartData.value.items || []).map(normalizeCartItem);
+          setCart(items);
+          setCartCount(items.reduce((s, i) => s + (i.qty || 1), 0));
         }
         if (favsData.status === 'fulfilled') {
           setFavs((favsData.value || []).map(a => a.id));
         }
         if (notifData.status === 'fulfilled') {
-          setUnreadCount(notifData.value?.unread || 0);
+          setUnreadCount(notifData.value?.count || 0);
         }
       } catch {
-        api.setToken(null);
+        setToken(null);
         setAuthStep('login');
       }
     })();
   }, []);
 
-  // Écouter l'expiration du token
   useEffect(() => {
-    api.onAuthExpired(() => {
+    onAuthExpired(() => {
       setUser(null);
       setAuthStep('login');
       showToast('Session expirée, reconnectez-vous', 'error');
@@ -103,31 +115,30 @@ export function AppProvider({ children }) {
   // ══════════════════════════════════
 
   const login = useCallback(async (token, userData, isNew) => {
-    api.setToken(token);
+    setToken(token);
     setUser(userData);
     setUserRole(userData.role || 'client');
     if (isNew || !userData.first_name) {
       setAuthStep('profile');
     } else {
       setAuthStep('ready');
-      // Load cart + favs
       try {
-        const [c, f] = await Promise.all([cartAPI.get(), favoritesAPI.getAll()]);
-        setCart(c?.items || []); setCartCount(c?.count || 0);
+        const [c, f] = await Promise.all([cartSvc.get(), socialSvc.getFavorites()]);
+        setCart(c?.items || []); setCartCount((c?.items || []).reduce((s, i) => s + (i.qty || 1), 0));
         setFavs((f || []).map(a => a.id));
       } catch {}
     }
   }, []);
 
   const completeProfile = useCallback(async (data) => {
-    const userData = await authAPI.completeProfile(data);
+    const userData = await auth.completeProfile(data);
     setUser(userData);
     setAuthStep('ready');
   }, []);
 
   const logout = useCallback(async () => {
-    try { await authAPI.logout(); } catch {}
-    api.setToken(null);
+    try { await auth.logout(); } catch {}
+    setToken(null);
     setUser(null);
     setAuthStep('login');
     setMode('buyer'); setTab(0); setScreen(null); setHistory([]);
@@ -163,15 +174,22 @@ export function AppProvider({ children }) {
   }, []);
 
   // ══════════════════════════════════
-  //  CART ACTIONS
+  //  CART ACTIONS (via services)
   // ══════════════════════════════════
 
   const addToCart = useCallback(async (article, qty = 1) => {
+    // ensure article contains price/photo/img for UI
+    const normalized = {
+      ...article,
+      price: article.price ?? article.prix ?? 0,
+      photo: article.photo || article.photos?.[0] || null,
+      img: article.img || article.image || article.photo || null,
+    };
     try {
-      await cartAPI.add(article.id, qty);
-      // Recharger le panier
-      const data = await cartAPI.get();
-      setCart(data?.items || []); setCartCount(data?.count || 0);
+      await cartSvc.add(normalized.id, qty);
+      const data = await cartSvc.get();
+      const items = (data?.items || []).map(normalizeCartItem);
+      setCart(items); setCartCount(items.reduce((s, i) => s + (i.qty || 1), 0));
       showToast('Ajouté au panier 🛍️');
       setScreen(null); setHistory([]); setTab(2);
     } catch (err) {
@@ -181,28 +199,26 @@ export function AppProvider({ children }) {
 
   const updateCartQty = useCallback(async (id, quantity) => {
     try {
-      if (quantity < 1) {
-        await cartAPI.remove(id);
-      } else {
-        await cartAPI.updateQty(id, quantity);
-      }
-      const data = await cartAPI.get();
-      setCart(data?.items || []); setCartCount(data?.count || 0);
+      if (quantity < 1) { await cartSvc.remove(id); }
+      else { await cartSvc.updateQty(id, quantity); }
+      const data = await cartSvc.get();
+      const items = (data?.items || []).map(normalizeCartItem);
+      setCart(items); setCartCount(items.reduce((s, i) => s + (i.qty || 1), 0));
     } catch {}
   }, []);
 
   const clearCart = useCallback(async () => {
-    await cartAPI.clear();
+    await cartSvc.clear();
     setCart([]); setCartCount(0);
   }, []);
 
   // ══════════════════════════════════
-  //  FAVORITES
+  //  FAVORITES (via services)
   // ══════════════════════════════════
 
   const toggleFav = useCallback(async (articleId) => {
     try {
-      const result = await favoritesAPI.toggle(articleId);
+      const result = await socialSvc.toggleFavorite(articleId);
       setFavs(prev => result.is_favorite
         ? [...prev, articleId]
         : prev.filter(id => id !== articleId)
@@ -236,29 +252,15 @@ export function AppProvider({ children }) {
   // ══════════════════════════════════
 
   const value = {
-    // Auth
     user, authStep, setAuthStep, socialProvider, setSocialProvider,
     login, completeProfile, logout,
-
-    // Navigation
     mode, setMode: switchMode, tab, setTab, vTab, setVTab, dTab, setDTab,
-    screen, setScreen, history, setHistory,
-    go, pop, goHome, switchTo: switchMode,
-
-    // Cart
+    screen, setScreen, history, setHistory, go, pop, goHome, switchTo: switchMode,
     cart, setCart, cartCount, addToCart, updateCartQty, clearCart,
-
-    // Favorites
     favs, toggleFav, isFav,
-
-    // Roles
     userRole, vendorPlan, setVendorPlan, vendorStatus, driverStatus,
     onRoleApproved, hasVendor, hasDriver,
-
-    // Notifications
     unreadCount, setUnreadCount,
-
-    // Toast
     toast, showToast,
   };
 

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { P, VENDORS } from "../../data";
+import { useData } from "../../hooks";
 import Img from "../../components/Img";
 import { fmt, disc } from "../../utils/helpers";
 
 function FlashScr({go,onBack,favs,toggleFav,isFav}){
+  const { P, VENDORS } = useData();
   const [t,setT]=useState({h:2,m:14,s:37});
   useEffect(()=>{const i=setInterval(()=>setT(p=>{let s=p.s-1,m=p.m,h=p.h;if(s<0){s=59;m--}if(m<0){m=59;h--}if(h<0){h=0;m=0;s=0}return{h,m,s}}),1000);return()=>clearInterval(i)},[]);
   const promos=P.filter(p=>p.old);

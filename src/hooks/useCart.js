@@ -23,7 +23,15 @@ export function useCart() {
         setItems(res.data.items.map(i => ({
           id: i.id,
           article_id: i.article_id,
-          product: { id: i.article_id, name: i.name, price: i.price, old: i.old_price, img: i.image, vendor: i.establishment_name },
+          product: {
+            id: i.article_id,
+            name: i.name,
+            price: i.price,
+            old: i.old_price,
+            img: i.image || i.img,
+            photo: i.photo || i.image || i.img || null,
+            vendor: i.establishment_name
+          },
           qty: i.quantity,
           price: i.price,
           note: i.note,
@@ -35,20 +43,27 @@ export function useCart() {
   useEffect(() => { loadCart(); }, [loadCart]);
 
   const addToCart = useCallback(async (product, qty = 1) => {
+    // create a normalized copy in case some fields are missing
+    const normalized = {
+      ...product,
+      price: product.price ?? product.prix ?? 0,
+      photo: product.photo || product.photos?.[0] || null,
+    };
+
     // Optimistic update
     setItems(prev => {
-      const idx = prev.findIndex(i => (i.product?.id || i.article_id) === product.id);
+      const idx = prev.findIndex(i => (i.product?.id || i.article_id) === normalized.id);
       if (idx >= 0) {
         const copy = [...prev];
         copy[idx] = { ...copy[idx], qty: copy[idx].qty + qty };
         return copy;
       }
-      return [...prev, { product, qty, price: product.price, article_id: product.id }];
+      return [...prev, { product: normalized, qty, price: normalized.price, article_id: normalized.id }];
     });
 
     // API sync
     if (tokenManager.isLoggedIn()) {
-      try { await cartApi.add(product.id, qty); } catch {}
+      try { await cartApi.add(normalized.id, qty); } catch {}
     }
   }, []);
 

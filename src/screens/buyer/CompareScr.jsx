@@ -1,9 +1,11 @@
 import { useState } from "react";
 import Img from "../../components/Img";
-import { P, REVIEWS } from "../../data";
+import { useData, useLoad } from "../../hooks";
+import { social } from "../../services";
 import { fmt } from "../../utils/helpers";
 
 function CompareScr({product:p,onBack}){
+  const { P } = useData();
   const [other,setOther]=useState(null);
   const [picking,setPicking]=useState(!p);
   const [slot,setSlot]=useState(p?2:1);

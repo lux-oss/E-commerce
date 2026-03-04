@@ -1,8 +1,9 @@
-import { P, VENDORS } from "../../data";
+import { useData } from "../../hooks";
 import Img from "../../components/Img";
 import { fmt } from "../../utils/helpers";
 
 function RestoListScr({go,onBack,favs,toggleFav,isFav}){
+  const { P, VENDORS } = useData();
   const restos=VENDORS.filter(v=>v.type==="restaurant");
   const restoProducts=P.filter(p=>p.type==="restaurant");
   return(<div className="scr"><div className="appbar"><button onClick={onBack}>←</button><h2>🍽️ Restaurants</h2><div style={{width:38}}/></div>

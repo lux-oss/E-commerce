@@ -24,6 +24,7 @@ const CSS=`
 @keyframes splash-up{0%{transform:translateY(16px);opacity:0}100%{transform:translateY(0);opacity:1}}
 .splash .loader{margin-top:40px;width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
 @keyframes marquee{0%{transform:translateX(0%)}100%{transform:translateX(-50%)}}
 .marquee-wrap{overflow:hidden;padding:0 0 12px;position:relative}
 .marquee-track{display:inline-flex;gap:8px;white-space:nowrap;animation:marquee 14s linear infinite}
@@ -343,14 +344,20 @@ const CSS=`
 .vd-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;margin-bottom:16px}
 .vd-stat{padding:16px;border-radius:16px;background:#fff;border:1px solid #E8E6E1}
 .vd-stat .vs-icon{font-size:20px;margin-bottom:6px}
-.vd-stat .vs-val{font-size:22px;font-weight:700;color:#191815;margin-bottom:2px}
-.vd-stat .vs-lbl{font-size:11px;color:#908C82}
+.vd-stat .vs-val,.vd-stat .vds-val{font-size:22px;font-weight:700;color:#191815;margin-bottom:2px}
+.vd-stat .vs-lbl,.vd-stat .vds-lbl{font-size:11px;color:#908C82}
 .vd-stat .vs-trend{font-size:11px;font-weight:600;margin-top:4px}
 .vd-stat .vs-trend.up{color:#10B981}.vd-stat .vs-trend.down{color:#EF4444}
+
+.vd-alert{margin:0 20px 14px;padding:14px 18px;border-radius:14px;background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(168,85,247,0.08));border:1px solid rgba(99,102,241,0.15);display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#6366F1;cursor:pointer}
+.vd-alert span{font-size:20px}
 
 .vd-chart{margin:0 20px 16px;padding:16px;background:#fff;border:1px solid #E8E6E1;border-radius:18px}
 .vd-chart h4{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
 .vd-chart h4 span{font-size:12px;color:#6366F1;font-weight:600;cursor:pointer}
+.vd-bars{display:flex;align-items:flex-end;gap:6px;height:100px}
+.vd-bar{flex:1;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#6366F1,#A855F7);min-height:8px;transition:height .3s;display:flex;align-items:flex-start;justify-content:center;position:relative}
+.vd-bv{font-size:9px;font-weight:600;color:#6366F1;position:absolute;top:-16px;white-space:nowrap}
 .chart-bars{display:flex;align-items:end;gap:6px;height:100px}
 .chart-bar{flex:1;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#6366F1,#A855F7);min-height:8px;transition:height .3s;position:relative;cursor:pointer}
 .chart-bar:hover{opacity:.8}
@@ -358,7 +365,7 @@ const CSS=`
 .chart-bar:hover .cb-tip{display:block}
 .chart-labels{display:flex;gap:6px;margin-top:6px}.chart-labels span{flex:1;text-align:center;font-size:10px;color:#908C82}
 
-.vd-top{margin:0 20px 16px;padding:16px;background:#fff;border:1px solid #E8E6E1;border-radius:16px}
+.vd-top{margin:0 20px 8px;padding:14px 16px;background:#fff;border:1px solid #E8E6E1;border-radius:16px;display:flex;align-items:center;gap:12px}
 .vd-top h4{font-size:14px;font-weight:700;margin-bottom:12px}
 .vd-top-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F5F4F1}
 .vd-top-item:last-child{border:none}
@@ -366,6 +373,15 @@ const CSS=`
 .vd-top-item .rank.g{background:rgba(245,158,11,0.1);color:#F59E0B}
 .vd-top-item .ti-info{flex:1}.vd-top-item .ti-info h5{font-size:13px;font-weight:600;margin:0}.vd-top-item .ti-info p{font-size:11px;color:#908C82;margin:0}
 .vd-top-item .ti-rev{font-size:12px;font-weight:700;color:#6366F1}
+
+.vdt-r{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366F1,#A855F7);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.vdt-i{flex:1;min-width:0}.vdt-i h4{font-size:13px;font-weight:600;margin:0 0 2px}.vdt-i span{font-size:11px;color:#908C82}
+
+.vd-quick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px;margin:16px 0 80px}
+.vdq{padding:16px 10px;border-radius:16px;background:#fff;border:1px solid #E8E6E1;text-align:center;cursor:pointer;transition:all .15s}
+.vdq:hover{border-color:#6366F1;transform:translateY(-2px)}
+.vdq span{font-size:24px;display:block;margin-bottom:6px}
+.vdq div{font-size:11px;font-weight:600;color:#5E5B53}
 
 /* Vendor orders */
 .vo-card{padding:16px;background:#fff;border:1px solid #E8E6E1;border-radius:16px;margin-bottom:10px;cursor:pointer;transition:all .15s}

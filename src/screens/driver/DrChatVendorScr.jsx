@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 function DrChatVendorScr({delivery:dl,onBack}){
   const now=()=>{const t=new Date();return `${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`};
   const [msgs,setMsgs]=useState([]);
-  const [inp,setInp]=useState("");const ref=useRef(null);const [typing,setTyping]=useState(false);
+  const [inp,setInp]=useState("");const ref=useRef(null);const [typing,setTyping]=useState(false);const fileRef=useRef(null);const [viewImg,setViewImg]=useState(null);
 
   useEffect(()=>{
     const timer=setTimeout(()=>{
@@ -30,7 +30,7 @@ function DrChatVendorScr({delivery:dl,onBack}){
   };
 
   return(<div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-    <div className="chat-head"><button onClick={onBack} style={{width:36,height:36,borderRadius:10,border:"1px solid #E8E6E1",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button><div className="ch-av" style={{background:"linear-gradient(135deg,#6366F1,#A855F7)",overflow:"hidden"}}>{dl.vendor.logo?<img src={dl.vendor.logo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:dl.vendor.avatar}</div><div className="ch-info"><h4>{dl.vendor.name}</h4><p>🏪 Commerce · {dl.ref}</p></div><button className="ch-call" style={{background:"#6366F1"}} onClick={()=>alert("📞 Appel")}>📞</button></div>
+    <div className="chat-head"><button onClick={onBack} style={{width:36,height:36,borderRadius:10,border:"1px solid #E8E6E1",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button><div className="ch-av" style={{background:"linear-gradient(135deg,#6366F1,#A855F7)",overflow:"hidden"}}>{dl.vendor.logo?<img src={dl.vendor.logo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:dl.vendor.avatar}</div><div className="ch-info"><h4>{dl.vendor.name}</h4><p style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:"#908C82"}}><span style={{color:"#10B981",fontWeight:600}}>🟢 En ligne</span><span>·</span><span>📍 Bacongo</span><span>·</span>🏪 Commerce · {dl.ref}</p></div><button className="ch-call" style={{background:"#6366F1"}} onClick={()=>alert("📞 Appel")}>📞</button></div>
     <div className="chat-body" ref={ref}>
       {msgs.length===0&&<div style={{textAlign:"center",padding:"40px 20px",color:"#C4C1BA"}}><div style={{fontSize:36,marginBottom:8}}>🏪</div><div style={{fontSize:13}}>Connexion avec le commerce...</div></div>}
       {msgs.map((m,i)=><div key={i} className={`msg ${m.from==="user"?"user":"bot"}`} style={m.from==="user"?{background:"#10B981"}:{}}>
@@ -42,7 +42,7 @@ function DrChatVendorScr({delivery:dl,onBack}){
     <div style={{padding:"8px 16px",background:"#F5F4F1",borderTop:"1px solid #E8E6E1",display:"flex",gap:6,flexShrink:0,overflowX:"auto"}}>
       {quickReplies.map(([icon,msg])=><button key={icon} onClick={()=>sendMsg(`${icon} ${msg}`)} style={{padding:"6px 12px",borderRadius:20,border:"1px solid #10B981",background:"rgba(16,185,129,0.04)",color:"#10B981",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0}}>{icon} {msg}</button>)}
     </div>
-    <div className="chat-input"><button className="chat-attach">📎</button><input placeholder="Message au vendeur..." value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()}/><button onClick={()=>sendMsg()} style={{background:"#10B981"}}>➤</button></div>
+    <div className="chat-input"><button className="chat-attach" onClick={()=>fileRef.current?.click()}>📎</button><input ref={fileRef} type="file" accept="image/*,.pdf,.doc,.docx" style={{display:"none"}} onChange={handleFileUpload}/><input placeholder="Message au vendeur..." value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()}/><button onClick={()=>sendMsg()} style={{background:"#10B981"}}>➤</button></div>
   </div>);
 }
 
