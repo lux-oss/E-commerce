@@ -3,10 +3,12 @@ import { useData } from "../../hooks";
 import Img from "../../components/Img";
 import { fmt, disc } from "../../utils/helpers";
 
-function VendorScr({vendor:v,go,onBack}){
-  const { P } = useData();
+function VendorScr({vendor:vProp,go,onBack}){
+  const { P, VENDORS } = useData();
+  // Look up full vendor from data if we only got partial info (from DetailScr)
+  const v = VENDORS.find(x => x.name === vProp?.name || x.id === vProp?.id) || vProp || {};
   const [following,setFollowing]=useState(false);
-  const [fCount,setFC]=useState(v.followers);
+  const [fCount,setFC]=useState(v.followers||0);
   const vp=P.filter(p=>p.vendor===v.name);
   const toggleFollow=()=>{setFollowing(f=>!f);setFC(c=>following?c-1:c+1)};
   return(<div className="scr">

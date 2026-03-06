@@ -19,9 +19,14 @@ export default {
     if (USE_MOCK) {
       await delay();
       const s = V_STATS[period === 'today' ? 'today' : period === 'week' ? 'week' : 'month'];
+      const chart = period === 'today' 
+        ? [8000, 15000, 22000, 28000, 18000, 12000, 7000] // hourly today
+        : period === 'week' 
+        ? V_STATS.chartWeek 
+        : V_STATS.chartMonth || V_STATS.chartWeek;
       return {
         stats: s,
-        chart: V_STATS.chartWeek,
+        chart,
         top_products: V_STATS.topProducts,
         new_orders: V_ORDERS.filter(o => o.status === "new").length,
         recent_orders: V_ORDERS.slice(0, 3),
@@ -233,7 +238,11 @@ export default {
 
   // ── Rapports ──
   getReports: async (period = 'month') => {
-    if (USE_MOCK) { await delay(); return V_STATS; }
+    if (USE_MOCK) {
+      await delay();
+      // Return full V_STATS object - screens pick the right period
+      return V_STATS;
+    }
     return vendorAPI.reports(period);
   },
 

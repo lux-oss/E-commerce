@@ -1,48 +1,92 @@
 import { fmt } from "../../utils/helpers";
 import Img from "../../components/Img";
 
-function CartScr({cart = [], setCart, go}){
-  // guard against malformed cart entries
-  const sub = cart.reduce((s, item) => {
-    const price = item?.product?.price || 0;
-    const qty = item?.qty || 0;
-    return s + price * qty;
-  }, 0);
-  const del = 2500;
-  const updQty=(i,d)=>{const n=[...cart];n[i].qty+=d;if(n[i].qty<1)n.splice(i,1);setCart(n)};
+function CartScr({cart,setCart,go,appliedCoupon,setAppliedCoupon}){
+  const getItem=(c)=>c.product||c;
+  const sub=cart.reduce((s,c)=>{const p=getItem(c);return s+(p.price||0)*(c.qty||1)},0);
+  const del=2500;
+
+  // Calculate discount
+  const discountAmount=appliedCoupon?(appliedCoupon.free?0:Math.round(sub*appliedCoupon.discount/100)):0;
+  const freeDelivery=appliedCoupon?.free||false;
+  const finalDelivery=freeDelivery?0:del;
+  const total=sub-discountAmount+finalDelivery;
+
+  const updQty=(i,d)=>{const n=[...cart];n[i].qty=(n[i].qty||1)+d;if(n[i].qty<1)n.splice(i,1);setCart(n)};
+
   return(<><div className="scr" style={{padding:20}}>
     <div className="appbar" style={{padding:0,marginBottom:16}}><h2>Panier ({cart.length})</h2></div>
     {cart.length===0?<div style={{textAlign:"center",padding:"60px 0"}}><div style={{fontSize:56}}>🛒</div><h3 style={{marginTop:14,fontSize:18,fontWeight:700}}>Votre panier est vide</h3><p style={{fontSize:13,color:"#908C82",marginTop:6}}>Découvrez nos produits</p></div>
-    :cart.map((c,i)=><div key={i} className="cart-item">
-      <div className="cart-img">
-        <Img
-          src={c?.product?.photo || c?.product?.img || c?.photo || c?.img || c?.product?.photos?.[0]}
-          emoji={c?.product?.img || c?.img}
-          style={{width:"100%",height:"100%",borderRadius:12}}
-          fit="cover"
-        />
-      </div>
-      <div className="cart-info">
-        <h4>{c?.product?.name || c?.product?.title || "Produit"}</h4>
-        <div className="cv">{c?.product?.vendor}</div>
-        <div className="cart-bot">
-          <span className="cp">
-            {fmt(((c?.price || c?.product?.price || 0) * c?.qty))}
-          </span>
-          <div className="qty">
-            <button onClick={()=>updQty(i,-1)}>−</button>
-            <span>{c?.qty}</span>
-            <button onClick={()=>updQty(i,1)}>+</button>
+    :cart.map((c,i)=>{const p=getItem(c);return(
+      <div key={i} className="cart-item">
+        <div className="cart-img"><Img src={p.photo} emoji={p.img} style={{width:"100%",height:"100%",borderRadius:12}} fit="cover"/></div>
+        <div className="cart-info">
+          <h4>{p.name}</h4>
+          <div className="cv">{p.vendor||""}</div>
+          <div className="cart-bot">
+            <span className="cp">{fmt((p.price||0)*(c.qty||1))}</span>
+            <div className="qty"><button onClick={()=>updQty(i,-1)}>−</button><span>{c.qty||1}</span><button onClick={()=>updQty(i,1)}>+</button></div>
           </div>
         </div>
-      </div>
-    </div>)}
-    {cart.length>0&&<div style={{marginTop:10}}><div className="coupon" style={{cursor:"pointer"}} onClick={()=>go("coupons")}><div className="coupon-left" style={{width:50,fontSize:16}}>🏷️</div><div className="coupon-right"><h4 style={{fontSize:13}}>Ajouter un code promo</h4><p>3 coupons disponibles</p></div></div></div>}
+      </div>)})}
+
+    {/* Coupon section */}
+    {cart.length>0&&<div style={{marginTop:10}}>
+      {appliedCoupon?(
+        <div style={{padding:14,background:"rgba(16,185,129,0.04)",border:"2px solid #10B981",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:20}}>🏷️</span>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:"#10B981"}}>{appliedCoupon.code}</div>
+              <div style={{fontSize:11,color:"#908C82"}}>
+                {appliedCoupon.free?"Livraison gratuite":`-${appliedCoupon.discount}% = -${fmt(discountAmount)}`}
+              </div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>go("coupons")} style={{padding:"6px 10px",borderRadius:8,border:"1px solid #E8E6E1",background:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Changer</button>
+            <button onClick={()=>setAppliedCoupon(null)} style={{padding:"6px 10px",borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"transparent",color:"#EF4444",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>✕</button>
+          </div>
+        </div>
+      ):(
+        <div className="coupon" style={{cursor:"pointer"}} onClick={()=>go("coupons")}>
+          <div className="coupon-left" style={{width:50,fontSize:16}}>🏷️</div>
+          <div className="coupon-right">
+            <h4 style={{fontSize:13}}>Ajouter un code promo</h4>
+            <p>Coupons disponibles</p>
+          </div>
+          <span style={{color:"#6366F1",fontWeight:700,fontSize:18}}>›</span>
+        </div>
+      )}
+    </div>}
   </div>
-  {cart.length>0&&<div className="cart-summary"><div className="cs-row"><span>Sous-total</span><b>{fmt(sub)}</b></div><div className="cs-row"><span>Livraison</span><b>{fmt(del)}</b></div><div className="cs-row tot"><span>Total</span><span className="ctp">{fmt(sub+del)}</span></div><button className="btn-primary" style={{marginTop:14}} onClick={()=>go("checkout")}>Passer la commande</button></div>}
+
+  {cart.length>0&&<div className="cart-summary">
+    <div className="cs-row"><span>Sous-total</span><b>{fmt(sub)}</b></div>
+
+    {/* Discount line */}
+    {discountAmount>0&&<div className="cs-row" style={{color:"#10B981"}}>
+      <span>🏷️ Réduction ({appliedCoupon.code})</span>
+      <b>-{fmt(discountAmount)}</b>
+    </div>}
+
+    <div className="cs-row">
+      <span>Livraison</span>
+      <b style={freeDelivery?{textDecoration:"line-through",color:"#908C82"}:{}}>
+        {fmt(del)}
+      </b>
+      {freeDelivery&&<span style={{color:"#10B981",fontWeight:700,fontSize:12,marginLeft:6}}>GRATUIT</span>}
+    </div>
+
+    <div className="cs-row tot"><span>Total</span><span className="ctp">{fmt(total)}</span></div>
+
+    {(discountAmount>0||freeDelivery)&&<div style={{textAlign:"center",fontSize:11,color:"#10B981",fontWeight:600,marginTop:4}}>
+      🎉 Vous économisez {fmt(discountAmount+(freeDelivery?del:0))} !
+    </div>}
+
+    <button className="btn-primary" style={{marginTop:14}} onClick={()=>go("checkout")}>Passer la commande</button>
+  </div>}
   </>);
 }
-
-/* 16 ── CHECKOUT ── */
 
 export default CartScr;

@@ -9,7 +9,7 @@ import {
   DrNotifScr, DrProfileScr, DrVehicleScr, DrZonesScr,
   DrStatsScr, DrSettingsScr, DrHelpScr
 } from "../screens/driver";
-import { WithdrawScr } from "../screens/buyer";
+import { WithdrawScr, PasswordScr } from "../screens/buyer";
 import { SettingsScr, HelpScr, AboutScr, TermsScr, PrivacyScr } from "../screens/common";
 
 export default function DriverScreens() {
@@ -41,6 +41,7 @@ export default function DriverScreens() {
     case "drStats": return <DrStatsScr onBack={back} />;
     case "drSettings": return <DrSettingsScr onBack={back} go={go} />;
     case "drHelp": return <DrHelpScr onBack={back} />;
+    case "password": return <PasswordScr onBack={back} />;
     case "terms": return <TermsScr onBack={back} />;
     case "privacy": return <PrivacyScr onBack={back} />;
     case "help": return <HelpScr onBack={back} />;

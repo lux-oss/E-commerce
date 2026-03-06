@@ -39,7 +39,22 @@ const V_PROMOS=[
   {id:"pr1",name:"Soldes Février",discount:20,type:"%",products:"Tous les articles",start:"1 Fév",end:"28 Fév",active:true,used:34},
   {id:"pr2",name:"Nouveau Client",discount:15,type:"%",code:"WELCOME15",products:"Premier achat",start:"1 Jan",end:"31 Mars",active:true,used:12},
 ];
-const V_STATS={today:{revenue:110000,orders:3,visitors:89},week:{revenue:583000,orders:14,visitors:412},month:{revenue:2150000,orders:52,visitors:1650},chartWeek:[85,120,95,160,140,110,180],topProducts:[{name:"Robe Wax",sold:45,revenue:1125000},{name:"Sac Cuir",sold:51,revenue:2142000},{name:"Chemise Bogolan",sold:33,revenue:594000}]};
+const V_STATS={
+  today:{revenue:110000,orders:3,visitors:89},
+  week:{revenue:583000,orders:14,visitors:412},
+  month:{revenue:2150000,orders:52,visitors:1650},
+  // Daily revenue in FCFA (Lun→Dim) — sums to ~583K weekly
+  chartWeek:[67000,92000,78000,110000,95000,72000,69000],
+  // Monthly revenue by week (4 weeks)
+  chartMonth:[480000,520000,610000,540000],
+  topProducts:[
+    {name:"Robe Wax Moderne",sold:45,revenue:1125000},
+    {name:"Sac à Main Cuir",sold:51,revenue:2142000},
+    {name:"Chemise Bogolan",sold:33,revenue:594000},
+    {name:"Sandales Cuir",sold:28,revenue:420000},
+    {name:"Écharpe Kente",sold:19,revenue:228000}
+  ]
+};
 const V_NOTIFS=[
   {icon:"🆕",title:"Nouvelle commande !",desc:"Marie Koumba — 92 000 FCFA",time:"Il y a 18 min",read:false},
   {icon:"💰",title:"Paiement reçu",desc:"#CMD-0890 confirmé par MTN MoMo",time:"Il y a 3h",read:false},

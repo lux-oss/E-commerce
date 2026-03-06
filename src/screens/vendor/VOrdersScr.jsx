@@ -5,6 +5,8 @@ import { vendor } from "../../services";
 import Loading from "../../components/Loading";
 import { fmt } from "../../utils/helpers";
 
+const ST={new:{bg:"rgba(59,130,246,0.08)",color:"#3B82F6",label:"🆕 Nouvelle"},preparing:{bg:"rgba(245,158,11,0.08)",color:"#F59E0B",label:"🔄 Préparation"},shipped:{bg:"rgba(139,92,246,0.08)",color:"#8B5CF6",label:"🚚 Expédiée"},delivered:{bg:"rgba(16,185,129,0.08)",color:"#10B981",label:"✅ Livrée"}};
+
 function VOrdersScr({go,onBack}){
   const [filter,setFilter]=useState("all");
   const { data, loading } = useLoad(() => vendor.getOrders(filter), [filter]);
@@ -12,14 +14,37 @@ function VOrdersScr({go,onBack}){
   const counts = data?.counts || { all:0, new:0, preparing:0, shipped:0, delivered:0 };
   return(<div className="scr">
     <div className="appbar">{onBack&&<button onClick={onBack}>←</button>}<h2>Commandes ({counts.all})</h2><div style={{width:38}}/></div>
-    <div className="vo-filter">{[["all","Tous",counts.all],["new","🆕 Nouvelles",counts.new],["preparing","🔄 En cours",counts.preparing],["shipped","🚚 Expédiées",counts.shipped],["delivered","✅ Livrées",counts.delivered]].map(([k,l,c])=><button key={k} className={filter===k?"on":""} onClick={()=>setFilter(k)}>{l} ({c})</button>)}</div>
+    <div className="vo-filter">{[["all","Tous",counts.all],["new","🆕",counts.new],["preparing","🔄",counts.preparing],["shipped","🚚",counts.shipped],["delivered","✅",counts.delivered]].map(([k,l,c])=><button key={k} className={filter===k?"on":""} onClick={()=>setFilter(k)}>{l} {c}</button>)}</div>
     <div style={{padding:"0 20px 100px"}}>
-      {loading?<Loading/>:orders.map(o=><div key={o.id} className="vo-card" onClick={()=>go("vOrderDetail",o)}>
-        <div className="vo-top"><span className="vo-ref">{o.ref}</span><span className={`vo-st ${o.status}`}>{o.status==="new"?"🆕 Nouvelle":o.status==="preparing"?"🔄 Préparation":o.status==="shipped"?"🚚 Expédiée":"✅ Livrée"}</span></div>
-        <div className="vo-client">👤 {o.client} · {o.payment}</div>
-        <div className="vo-items">{o.items.map((it,i)=><div key={i} className="vo-item"><div className="vo-item-img"><Img src={it.photo} emoji={it.img} style={{width:"100%",height:"100%"}} fit="cover"/></div><span>{it.qty}× {it.name}</span></div>)}</div>
-        <div className="vo-bot"><span className="vo-total">{fmt(o.total)}</span><span className="vo-date">{o.date}</span></div>
-      </div>)}
+      {loading?<Loading/>:orders.length===0?<div style={{textAlign:"center",padding:"50px 0"}}><div style={{fontSize:40,marginBottom:8}}>📭</div><div style={{fontSize:14,fontWeight:600}}>Aucune commande</div></div>
+      :orders.map(o=>{
+        const st=ST[o.status]||ST.new;
+        return(<div key={o.id} onClick={()=>go("vOrderDetail",o)} style={{padding:14,background:"#fff",border:"1px solid #E8E6E1",borderRadius:16,marginBottom:10,cursor:"pointer",transition:"all .15s"}}>
+          {/* Header: ref + status */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <span style={{fontSize:13,fontWeight:700,fontFamily:"monospace"}}>{o.ref}</span>
+            <span style={{padding:"4px 10px",borderRadius:8,background:st.bg,color:st.color,fontSize:11,fontWeight:600}}>{st.label}</span>
+          </div>
+          {/* Client + payment */}
+          <div style={{fontSize:12,color:"#5E5B53",marginBottom:8}}>👤 {o.client} · {o.payment}</div>
+          {/* Items — compact row with small thumbnails */}
+          <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
+            {o.items.map((it,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 8px 4px 4px",background:"#F5F4F1",borderRadius:10,fontSize:11,fontWeight:500}}>
+                <div style={{width:28,height:28,borderRadius:6,overflow:"hidden",flexShrink:0,background:"#E8E6E1"}}>
+                  <Img src={it.photo} emoji={it.img} style={{width:"100%",height:"100%"}} fit="cover"/>
+                </div>
+                {it.qty}× {it.name.length>16?it.name.substring(0,16)+"…":it.name}
+              </div>
+            ))}
+          </div>
+          {/* Footer: total + date */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:15,fontWeight:700,color:"#6366F1"}}>{fmt(o.total)}</span>
+            <span style={{fontSize:11,color:"#908C82"}}>{o.date}</span>
+          </div>
+        </div>);
+      })}
     </div>
   </div>);
 }

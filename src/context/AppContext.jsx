@@ -26,24 +26,7 @@ export function AppProvider({ children }) {
   // ── Cart ──
   const [cart, setCart] = useState([]);
   const [cartCount, setCartCount] = useState(0);
-
-  // normalize items returned by backend/mock so UI has consistent fields
-  const normalizeCartItem = i => {
-    const prod = i.product || {};
-    return {
-      ...i,
-      product: {
-        id: prod.id || i.article_id,
-        name: prod.name || i.name || prod.title,
-        price: prod.price ?? i.price ?? 0,
-        old: prod.old_price || prod.old || i.old || 0,
-        img: prod.img || prod.image || i.img || "",
-        photo: prod.photo || prod.image || prod.img || i.photo || null,
-        vendor: prod.vendor || i.vendor || "",
-      },
-      price: i.price || prod.price || 0,
-    };
-  };
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // ── Favorites ──
   const [favs, setFavs] = useState([]);
@@ -85,9 +68,8 @@ export function AppProvider({ children }) {
         ]);
 
         if (cartData.status === 'fulfilled' && cartData.value) {
-          const items = (cartData.value.items || []).map(normalizeCartItem);
-          setCart(items);
-          setCartCount(items.reduce((s, i) => s + (i.qty || 1), 0));
+          setCart(cartData.value.items || []);
+          setCartCount((cartData.value.items || []).reduce((s, i) => s + (i.qty || 1), 0));
         }
         if (favsData.status === 'fulfilled') {
           setFavs((favsData.value || []).map(a => a.id));
@@ -178,18 +160,10 @@ export function AppProvider({ children }) {
   // ══════════════════════════════════
 
   const addToCart = useCallback(async (article, qty = 1) => {
-    // ensure article contains price/photo/img for UI
-    const normalized = {
-      ...article,
-      price: article.price ?? article.prix ?? 0,
-      photo: article.photo || article.photos?.[0] || null,
-      img: article.img || article.image || article.photo || null,
-    };
     try {
-      await cartSvc.add(normalized.id, qty);
+      await cartSvc.add(article.id, qty);
       const data = await cartSvc.get();
-      const items = (data?.items || []).map(normalizeCartItem);
-      setCart(items); setCartCount(items.reduce((s, i) => s + (i.qty || 1), 0));
+      setCart(data?.items || []); setCartCount((data?.items || []).reduce((s, i) => s + (i.qty || 1), 0));
       showToast('Ajouté au panier 🛍️');
       setScreen(null); setHistory([]); setTab(2);
     } catch (err) {
@@ -202,14 +176,13 @@ export function AppProvider({ children }) {
       if (quantity < 1) { await cartSvc.remove(id); }
       else { await cartSvc.updateQty(id, quantity); }
       const data = await cartSvc.get();
-      const items = (data?.items || []).map(normalizeCartItem);
-      setCart(items); setCartCount(items.reduce((s, i) => s + (i.qty || 1), 0));
+      setCart(data?.items || []); setCartCount((data?.items || []).reduce((s, i) => s + (i.qty || 1), 0));
     } catch {}
   }, []);
 
   const clearCart = useCallback(async () => {
     await cartSvc.clear();
-    setCart([]); setCartCount(0);
+    setCart([]); setCartCount(0); setAppliedCoupon(null);
   }, []);
 
   // ══════════════════════════════════
@@ -257,6 +230,7 @@ export function AppProvider({ children }) {
     mode, setMode: switchMode, tab, setTab, vTab, setVTab, dTab, setDTab,
     screen, setScreen, history, setHistory, go, pop, goHome, switchTo: switchMode,
     cart, setCart, cartCount, addToCart, updateCartQty, clearCart,
+    appliedCoupon, setAppliedCoupon,
     favs, toggleFav, isFav,
     userRole, vendorPlan, setVendorPlan, vendorStatus, driverStatus,
     onRoleApproved, hasVendor, hasDriver,

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { fmt } from "../../utils/helpers";
+import ShopTeamTab from "./ShopTeamTab";
 
 function VShopDetailScr({shop:sh,go,onBack}){
   const [tab,setTab]=useState(0);

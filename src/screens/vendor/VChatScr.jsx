@@ -4,68 +4,32 @@ function VChatScr({chat:c,onBack}){
   const now=()=>{const t=new Date();return `${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`};
   const clientName=c?.name||"Client";
   const [msgs,setMsgs]=useState([]);
-  const [inp,setInp]=useState("");const ref=useRef(null);const [typing,setTyping]=useState(false);const fileRef=useRef(null);const [viewImg,setViewImg]=useState(null);
+  const [inp,setInp]=useState("");const ref=useRef(null);const fileRef=useRef(null);const [typing,setTyping]=useState(false);const [viewImg,setViewImg]=useState(null);
 
-  // Welcome message from client
-  useEffect(()=>{
-    const timer=setTimeout(()=>{
-      setMsgs([
-        {from:"bot",text:`Bonjour ! Je suis intéressé(e) par vos articles.`,time:now()},
-        {from:"bot",text:c?.lastMsg||"C'est disponible en taille L ?",time:now()},
-      ]);
-    },400);
-    return ()=>clearTimeout(timer);
-  },[]);
-
+  useEffect(()=>{setTimeout(()=>{setMsgs([{from:"bot",text:`Bonjour ! J'ai une question sur ma commande.`,time:now(),isWelcome:true}])},500);return()=>{}},[]);
   useEffect(()=>{ref.current&&(ref.current.scrollTop=ref.current.scrollHeight)},[msgs,typing]);
 
-  const quickReplies=["Oui, c'est disponible !","Je vérifie le stock","Livraison possible aujourd'hui","Voir nos promotions"];
+  const quickReplies=["Commande en préparation","En rupture de stock","Livraison sous 1h","Merci de votre patience"];
+  const botReplies=["D'accord, merci !","Parfait, j'attends.","Super, pas de souci !","OK je comprends.","Vous pouvez livrer quand ?"];
 
-  const botResponses={
-    "Oui, c'est disponible !":[" Super ! Je veux commander.","Parfait, comment je fais pour payer ?"],
-    "Je vérifie le stock":["D'accord, j'attends votre retour !","Merci, prenez votre temps."],
-    "Livraison possible aujourd'hui":["Génial ! Je suis à Bacongo.","Ah super, combien ça coûte la livraison ?"],
-    "Voir nos promotions":["Ah oui ! Montrez-moi ça.","Je suis intéressé(e), envoyez les détails."],
-  };
+  const sendMsg=(text)=>{const msg=text||inp.trim();if(!msg)return;setMsgs(p=>[...p,{from:"user",text:msg,time:now()}]);setInp("");setTyping(true);setTimeout(()=>{setTyping(false);setMsgs(p=>[...p,{from:"bot",text:botReplies[Math.floor(Math.random()*botReplies.length)],time:now()}])},800+Math.random()*600)};
 
-  const fallbackResponses=["Merci !","D'accord, je vais voir.","Super, je commande !","C'est noté.","Parfait, merci beaucoup !","OK j'attends votre retour."];
-
-  const sendMsg=(text)=>{
-    const msg=text||inp.trim();
-    if(!msg)return;
-    setMsgs(p=>[...p,{from:"user",text:msg,time:now()}]);
-    setInp("");
-    setTyping(true);
-    setTimeout(()=>{
-      setTyping(false);
-      const replies=botResponses[msg];
-      const reply=replies?replies[Math.floor(Math.random()*replies.length)]:fallbackResponses[Math.floor(Math.random()*fallbackResponses.length)];
-      setMsgs(p=>[...p,{from:"bot",text:reply,time:now()}]);
-    },1000+Math.random()*800);
-  };
+  const handleFileUpload=(e)=>{const file=e.target.files?.[0];if(!file||file.size>5*1024*1024)return;const reader=new FileReader();reader.onload=()=>{const isImg=file.type.startsWith("image/");setMsgs(p=>[...p,{from:"user",text:isImg?"":"📎 "+file.name,time:now(),attachment:{type:isImg?"image":"file",url:isImg?reader.result:null,name:file.name,size:(file.size/1024).toFixed(0)+" KB"}}]);setTyping(true);setTimeout(()=>{setTyping(false);setMsgs(p=>[...p,{from:"bot",text:isImg?"Photo reçue ! 📸":"Fichier reçu ! 📄",time:now()}])},1000)};reader.readAsDataURL(file);e.target.value=""};
 
   return(<div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-    <div className="chat-head">
-      <button onClick={onBack} style={{width:36,height:36,borderRadius:10,border:"1px solid #E8E6E1",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
-      <div className="ch-av">{c?.avatar||"👤"}</div>
-      <div className="ch-info"><h4>{clientName}</h4><p style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:"#908C82"}}><span style={{color:"#10B981",fontWeight:600}}>🟢 En ligne</span><span>·</span><span>📍 Moungali</span><span>·</span>🟢 En ligne</p></div>
-    </div>
+    <div className="chat-head"><button onClick={onBack} style={{width:36,height:36,borderRadius:10,border:"1px solid #E8E6E1",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button><div style={{position:"relative"}}><div className="ch-av">{c?.avatar||"👤"}</div><div style={{position:"absolute",bottom:-1,right:-1,width:10,height:10,borderRadius:"50%",background:c?.online!==false?"#10B981":"#908C82",border:"2px solid #fff"}}/></div><div className="ch-info"><h4>{clientName}</h4><p style={{fontSize:11,color:"#908C82"}}>{c?.online!==false?"🟢 En ligne":"⚪ Hors ligne"} · 📍 {c?.zone||"Brazzaville"}</p></div><button className="ch-call">📞</button></div>
     <div className="chat-body" ref={ref}>
-      {msgs.length===0&&<div style={{textAlign:"center",padding:"40px 20px",color:"#C4C1BA"}}><div style={{fontSize:36,marginBottom:8}}>💬</div><div style={{fontSize:13}}>Chargement...</div></div>}
-
-      {msgs.map((m,i)=><div key={i} className={`msg ${m.from==="user"?"user":"bot"}`}>{m.text}<div className="msg-time">{m.time}</div></div>)}
-
-      {typing&&<div className="msg bot"><span className="typing-dots">
-        <span style={{animation:"blink 1.2s infinite",animationDelay:"0s"}}>●</span>
-        <span style={{animation:"blink 1.2s infinite",animationDelay:"0.2s"}}>●</span>
-        <span style={{animation:"blink 1.2s infinite",animationDelay:"0.4s"}}>●</span>
-      </span></div>}
+      {msgs.map((m,i)=><div key={i} className={`msg ${m.from==="user"?"user":"bot"}`}>
+        {m.isWelcome&&<div style={{fontSize:24,marginBottom:4}}>{c?.avatar||"👤"}</div>}
+        {m.attachment&&m.attachment.type==="image"&&m.attachment.url&&<img src={m.attachment.url} alt="" onClick={()=>setViewImg(m.attachment.url)} style={{maxWidth:"100%",maxHeight:180,borderRadius:10,marginBottom:4,cursor:"pointer"}}/>}
+        {m.attachment&&m.attachment.type==="file"&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(0,0,0,.05)",borderRadius:10,marginBottom:4}}><span style={{fontSize:20}}>📄</span><div><div style={{fontSize:12,fontWeight:600}}>{m.attachment.name}</div><div style={{fontSize:10,opacity:.7}}>{m.attachment.size}</div></div></div>}
+        {m.text&&<span>{m.text}</span>}<div className="msg-time">{m.time}</div>
+      </div>)}
+      {typing&&<div className="msg bot"><span className="typing-dots"><span style={{animation:"blink 1.2s infinite"}}>●</span><span style={{animation:"blink 1.2s infinite",animationDelay:".2s"}}>●</span><span style={{animation:"blink 1.2s infinite",animationDelay:".4s"}}>●</span></span></div>}
+      {msgs.length===1&&msgs[0].isWelcome&&<div style={{display:"flex",gap:6,flexWrap:"wrap",padding:"8px 0"}}>{quickReplies.map(q=><button key={q} onClick={()=>sendMsg(q)} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #6366F1",background:"rgba(99,102,241,0.04)",color:"#6366F1",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{q}</button>)}</div>}
     </div>
-    <div style={{padding:"8px 16px",background:"#F5F4F1",borderTop:"1px solid #E8E6E1",display:"flex",gap:6,flexShrink:0,overflowX:"auto"}}>
-      {quickReplies.map(q=><button key={q} onClick={()=>sendMsg(q)} style={{padding:"6px 12px",borderRadius:20,border:"1px solid #6366F1",background:"rgba(99,102,241,0.04)",color:"#6366F1",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0}}>{q}</button>)}
-    </div>
-    <div className="chat-input"><button className="chat-attach" onClick={()=>fileRef.current?.click()}>📎</button><input ref={fileRef} type="file" accept="image/*,.pdf,.doc,.docx" style={{display:"none"}} onChange={handleFileUpload}/><input placeholder={`Répondre à ${clientName.split(" ")[0]}...`} value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()}/><button onClick={()=>sendMsg()}>➤</button></div>
+    <div className="chat-input"><button className="chat-attach" onClick={()=>fileRef.current?.click()}>📎</button><input ref={fileRef} type="file" accept="image/*,.pdf,.doc,.docx" style={{display:"none"}} onChange={handleFileUpload}/><input placeholder="Répondre au client..." value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()}/><button onClick={()=>sendMsg()}>➤</button></div>
+    {viewImg&&<div onClick={()=>setViewImg(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",padding:20}}><img src={viewImg} alt="" style={{maxWidth:"100%",maxHeight:"80vh",borderRadius:12,objectFit:"contain"}}/></div>}
   </div>);
 }
-
 export default VChatScr;

@@ -1,11 +1,47 @@
+import { useState } from "react";
 import { D_NOTIFS } from "../../data/driverData";
 
 function DrNotifScr({onBack}){
-  return(<div className="scr"><div className="appbar"><button onClick={onBack}>←</button><h2>Notifications</h2><div style={{width:38}}/></div>
-    {D_NOTIFS.map((n,i)=><div key={i} className={`notif-item ${!n.read?"unread":""}`}><div className="ni-icon">{n.icon}</div><div className="ni-body"><h4>{n.title}</h4><p>{n.desc}</p><div className="ni-t">{n.time}</div></div></div>)}
+  const [notifs,setNotifs]=useState(D_NOTIFS.map((n,i)=>({...n,id:i})));
+  const [expanded,setExpanded]=useState(null);
+
+  const markRead=(id)=>setNotifs(prev=>prev.map(n=>n.id===id?{...n,read:true}:n));
+  const markAllRead=()=>setNotifs(prev=>prev.map(n=>({...n,read:true})));
+  const unreadCount=notifs.filter(n=>!n.read).length;
+
+  const details={
+    0:"Commande #CMD-0891 de Mode Afrique.\nClient: Marie Koumba\nAdresse: Bacongo, Rue 14\nArticles: Robe Wax (×2), Sac Cuir (×1)\nTotal: 92 000 FCFA\nFrais livraison: 2 500 FCFA",
+    1:"Virement reçu sur votre compte Airtel Money.\nMontant: 2 500 FCFA\nRéférence: PAY-2026-0891\nSolde actuel: 198 000 FCFA",
+    2:"David Tsaty vous a évalué après la livraison #CMD-0885.\nNote: ★★★★★ (5/5)\nCommentaire: 'Livreur très rapide et professionnel !'",
+    3:"Félicitations ! Vous avez atteint 10 livraisons cette semaine.\nBonus: +5 000 FCFA crédité automatiquement.\nContinuez comme ça pour débloquer le bonus suivant à 20 livraisons !",
+    4:"Les tarifs de livraison à Pointe-Noire seront mis à jour le 1er Mars 2026.\nZone centre: 2 000 FCFA → 2 500 FCFA\nZone périphérie: 3 000 FCFA → 3 500 FCFA\nConsultez la section Zones pour plus de détails.",
+  };
+
+  return(<div className="scr"><div className="appbar"><button onClick={onBack}>←</button><h2>Notifications {unreadCount>0&&<span style={{fontSize:12,color:"#6366F1",fontWeight:600}}>({unreadCount})</span>}</h2>
+    {unreadCount>0&&<button onClick={markAllRead} style={{fontSize:12,color:"#6366F1",fontWeight:600,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Tout lire</button>}</div>
+    <div style={{padding:"0 0 80px"}}>
+      {notifs.map((n)=>{
+        const isOpen=expanded===n.id;
+        return(<div key={n.id} onClick={()=>{setExpanded(isOpen?null:n.id);if(!n.read)markRead(n.id)}} style={{padding:"14px 20px",borderBottom:"1px solid #F5F4F1",cursor:"pointer",background:!n.read?"rgba(99,102,241,0.03)":"transparent",transition:"background .2s"}}>
+          <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+            <div style={{width:40,height:40,borderRadius:12,background:!n.read?"rgba(99,102,241,0.08)":"#F5F4F1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{n.icon}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <h4 style={{fontSize:14,fontWeight:!n.read?700:600,color:"#191815",margin:0}}>{n.title}</h4>
+                {!n.read&&<div style={{width:8,height:8,borderRadius:"50%",background:"#6366F1",flexShrink:0,marginTop:5}}/>}
+              </div>
+              <p style={{fontSize:12,color:"#5E5B53",margin:"2px 0 0"}}>{n.desc}</p>
+              <div style={{fontSize:11,color:"#908C82",marginTop:3}}>{n.time}</div>
+            </div>
+          </div>
+          {/* Expanded details */}
+          {isOpen&&details[n.id]&&<div style={{marginTop:10,marginLeft:52,padding:12,background:"#F5F4F1",borderRadius:12,fontSize:12,color:"#5E5B53",lineHeight:1.6,whiteSpace:"pre-line"}}>
+            {details[n.id]}
+          </div>}
+        </div>);
+      })}
+    </div>
   </div>);
 }
-
-/* D10 ── DRIVER PROFILE ── */
 
 export default DrNotifScr;

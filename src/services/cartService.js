@@ -21,13 +21,7 @@ export default {
       else {
         const article = P.find(p => p.id === articleId);
         if (!article) throw new Error("Article introuvable");
-        _mockCart.push({
-          id: "mc" + Date.now(),
-          article_id: articleId,
-          qty: quantity,
-          note,
-          product: { ...article }
-        });
+        _mockCart.push({ id: "mc" + Date.now(), article_id: articleId, name: article.name, price: article.price, img: article.img, photo: article.photo, qty: quantity, note });
       }
       return { count: _mockCart.reduce((s, i) => s + i.qty, 0) };
     }

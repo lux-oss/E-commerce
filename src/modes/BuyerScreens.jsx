@@ -2,6 +2,7 @@
  * BuyerScreens — Chunk acheteur (lazy loaded)
  * Utilise useApp() au lieu de props
  */
+import { useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import {
   HomeScr, SearchScr, DetailScr, GalleryScr, CompareScr, ReviewsScr,
@@ -14,11 +15,18 @@ import {
 } from "../screens/buyer";
 import { SettingsScr, HelpScr, AboutScr, TermsScr, PrivacyScr } from "../screens/common";
 
+// Redirect component — defers setState to useEffect
+function Redirect({ action }) {
+  useEffect(() => { action(); }, []);
+  return null;
+}
+
 export default function BuyerScreens() {
   const {
     screen, tab, setTab, setScreen, setHistory,
     go, pop, goHome, switchTo,
     cart, setCart, addToCart, updateCartQty,
+    appliedCoupon, setAppliedCoupon,
     favs, toggleFav, isFav,
     userRole, vendorPlan, vendorStatus, driverStatus,
     logout, onRoleApproved, hasVendor, hasDriver,
@@ -27,7 +35,7 @@ export default function BuyerScreens() {
   if (!screen) {
     if (tab === 0) return <HomeScr go={go} favs={favs} toggleFav={toggleFav} isFav={isFav} />;
     if (tab === 1) return <SearchScr go={go} fromTab favs={favs} toggleFav={toggleFav} isFav={isFav} />;
-    if (tab === 2) return <CartScr cart={cart} setCart={setCart} updateCartQty={updateCartQty} go={go} />;
+    if (tab === 2) return <CartScr cart={cart} setCart={setCart} updateCartQty={updateCartQty} go={go} appliedCoupon={appliedCoupon} setAppliedCoupon={setAppliedCoupon} />;
     if (tab === 3) return <OrdersScr go={go} />;
     return <ProfileScr go={go} userRole={userRole} vendorPlan={vendorPlan} vendorStatus={vendorStatus} driverStatus={driverStatus} onLogout={logout} />;
   }
@@ -46,11 +54,11 @@ export default function BuyerScreens() {
     case "allProducts": return <AllProductsScr go={go} onBack={back} favs={favs} toggleFav={toggleFav} isFav={isFav} />;
     case "flash": return <FlashScr go={go} onBack={back} favs={favs} toggleFav={toggleFav} isFav={isFav} />;
     case "nearby": return <NearbyScr go={go} onBack={back} />;
-    case "coupons": return <CouponsScr onBack={back} />;
-    case "checkout": return <CheckoutScr onDone={goHome} />;
-    case "cart": setTab(2); setScreen(null); return null;
-    case "orders": setTab(3); setScreen(null); return null;
-    case "search": setTab(1); setScreen(null); return null;
+    case "coupons": return <CouponsScr onBack={back} cart={cart} appliedCoupon={appliedCoupon} onApply={(c)=>{setAppliedCoupon(c);back()}} />;
+    case "checkout": return <CheckoutScr onDone={goHome} cart={cart} appliedCoupon={appliedCoupon} setAppliedCoupon={setAppliedCoupon} />;
+    case "cart": return <Redirect action={() => { setTab(2); setScreen(null); }} />;
+    case "orders": return <Redirect action={() => { setTab(3); setScreen(null); }} />;
+    case "search": return <Redirect action={() => { setTab(1); setScreen(null); }} />;
     case "orderDetail": return <OrderDetailScr order={data} onBack={back} go={go} />;
     case "tracking": return <TrackingScr onBack={back} go={go} />;
     case "chatDriver": return <ChatScr onBack={back} />;
@@ -71,8 +79,8 @@ export default function BuyerScreens() {
     case "recharge": return <RechargeScr onBack={back} />;
     case "roleReg": return <RoleRegScr onBack={back} onDone={(role, plan) => { onRoleApproved(role, plan); goHome(); }} />;
     case "vendorReg": return <RoleRegScr onBack={back} onDone={(role, plan) => { onRoleApproved(role, plan); goHome(); }} forceRole="vendor" />;
-    case "switchVendor": if (hasVendor) { switchTo("vendor") } else { go("roleReg") }; return null;
-    case "switchDriver": if (hasDriver) { switchTo("driver") } else { go("roleReg") }; return null;
+    case "switchVendor": return <Redirect action={() => { if (hasVendor) switchTo("vendor"); else go("roleReg"); }} />;
+    case "switchDriver": return <Redirect action={() => { if (hasDriver) switchTo("driver"); else go("roleReg"); }} />;
     default: return null;
   }
 }
