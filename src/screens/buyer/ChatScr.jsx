@@ -68,7 +68,7 @@ function ChatScr({onBack}){
   return(<>
     {/* Header with online status + zone */}
     <div className="chat-head">
-      <button onClick={onBack} style={{width:36,height:36,borderRadius:10,border:"1px solid #E8E6E1",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+      <button onClick={onBack} style={{width:36,height:36,borderRadius:10,border:"1px solid #E8E6E1",background:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#191815" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
       <div style={{position:"relative"}}>
         <div className="ch-av">{driver.avatar}</div>
         <div style={{position:"absolute",bottom:-1,right:-1,width:10,height:10,borderRadius:"50%",background:driver.online?"#10B981":"#908C82",border:"2px solid #fff"}}/>

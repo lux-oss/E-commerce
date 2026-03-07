@@ -155,7 +155,7 @@ const CSS=`
 /* Orders */
 .ocard{padding:16px;background:#fff;border:1px solid #E8E6E1;border-radius:18px;margin-bottom:12px;cursor:pointer;transition:all .15s}.ocard:hover{border-color:#bbb}
 .ocard-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.ocard-h h4{font-size:14px;font-weight:700}
-.ost{padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600}.ost.ship{background:rgba(245,158,11,0.1);color:#F59E0B}.ost.done{background:rgba(16,185,129,0.1);color:#10B981}
+.ost{padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600}.ost.ship{background:rgba(245,158,11,0.1);color:#F59E0B}.ost.done{background:rgba(16,185,129,0.1);color:#10B981}.ost.cancel{background:rgba(239,68,68,0.1);color:#EF4444}.ost.prep{background:rgba(99,102,241,0.1);color:#6366F1}
 .odate{font-size:11px;color:#908C82;margin-bottom:10px}
 
 /* Tracking */

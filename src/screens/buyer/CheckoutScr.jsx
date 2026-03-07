@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { fmt } from "../../utils/helpers";
+import { fmt, getVendorPromo } from "../../utils/helpers";
+import { useData } from "../../hooks";
 
-function CheckoutScr({onDone,cart=[],appliedCoupon,setAppliedCoupon}){
+function CheckoutScr({onBack,onDone,cart=[],appliedCoupon,setAppliedCoupon}){
   const [step,setStep]=useState(0);const [momo,setMomo]=useState("airtel");const [ok,setOk]=useState(false);
   const momos=[{k:"airtel",n:"Airtel Money",e:"🔴"},{k:"mtn",n:"MTN MoMo",e:"🟡"},{k:"orange",n:"Orange Money",e:"🟠"},{k:"kolo",n:"Kolo Pay",e:"🟣"}];
+  const { VENDORS } = useData();
 
   const getItem=(c)=>c.product||c;
-  const sub=cart.reduce((s,c)=>{const p=getItem(c);return s+(p.price||0)*(c.qty||1)},0)||228500;
+  const getPrice=(c)=>{const p=getItem(c);const vp=getVendorPromo(p,VENDORS);return vp?vp.promoPrice:(p.price||0)};
+  const sub=cart.reduce((s,c)=>s+getPrice(c)*(c.qty||1),0)||228500;
   const del=2500;
   const discountAmount=appliedCoupon?(appliedCoupon.free?0:Math.round(sub*appliedCoupon.discount/100)):0;
   const freeDelivery=appliedCoupon?.free||false;
@@ -19,7 +22,7 @@ function CheckoutScr({onDone,cart=[],appliedCoupon,setAppliedCoupon}){
   };
 
   return(<>
-    <div className="appbar"><button onClick={()=>step>0?setStep(step-1):null}>←</button><h2>Paiement</h2><div style={{width:38}}/></div>
+    <div className="appbar"><button onClick={()=>step>0?setStep(step-1):onBack?.()}>←</button><h2>Paiement</h2><div style={{width:38}}/></div>
     <div className="steps">{["Adresse","Paiement","Confirmer"].map((s,i)=><div key={s} style={{display:"contents"}}>{i>0&&<div className={`sline ${step>=i?"on":""}`}/>}<div className="step-col"><div className={`sdot ${step>i?"on":step>=i?"on":""}`}>{step>i?"✓":i+1}</div><div className={`slbl ${step>=i?"on":""}`}>{s}</div></div></div>)}</div>
     <div className="scr" style={{padding:20}}>
       {step===0&&<><h3 style={{fontSize:18,fontWeight:700,marginBottom:18}}>Adresse de livraison</h3>

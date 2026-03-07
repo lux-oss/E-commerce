@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Img from "../../components/Img";
-import { fmt, disc } from "../../utils/helpers";
+import { BackButton, FavButton } from "../../components/BackButton";
+import { useData } from "../../hooks";
+import { fmt, disc, getVendorPromo } from "../../utils/helpers";
 
 // Generate specs based on product type
 const getSpecs=(p)=>{
@@ -45,7 +47,10 @@ function DetailScr({product:p,onBack,onAddCart,go,favs,toggleFav,isFav}){
   const [qty,setQty]=useState(1);
   const [showSpecs,setShowSpecs]=useState(false);
   const [activeTab,setActiveTab]=useState("desc");
+  const { VENDORS } = useData();
   const specs=getSpecs(p);
+  const vp=getVendorPromo(p,VENDORS);
+  const finalPrice=vp?vp.promoPrice:p.price;
 
   return(<>
     <div className="scr">
@@ -53,8 +58,8 @@ function DetailScr({product:p,onBack,onAddCart,go,favs,toggleFav,isFav}){
       <div className="det-img" onClick={()=>go("gallery",p)}>
         <Img src={p.photos?.[0]||p.photo} emoji={p.img} style={{width:"100%",height:"100%"}} fit="cover"/>
         <div className="det-top">
-          <button onClick={e=>{e.stopPropagation();onBack()}}>←</button>
-          <button onClick={e=>{e.stopPropagation();toggleFav(p.id)}} style={{color:isFav(p.id)?"#EF4444":"inherit"}}>{isFav(p.id)?"❤️":"♡"}</button>
+          <BackButton onClick={e=>{e.stopPropagation();onBack()}} />
+          <FavButton active={isFav(p.id)} onClick={e=>{e.stopPropagation();toggleFav(p.id)}} />
         </div>
         {disc(p)>0&&<span className="badge" style={{position:"absolute",bottom:14,left:14,zIndex:5}}>-{disc(p)}%</span>}
         <div style={{position:"absolute",bottom:14,right:14,background:"rgba(0,0,0,.4)",color:"#fff",padding:"4px 10px",borderRadius:8,fontSize:11,fontWeight:600,zIndex:5}}>{p.photos?.length||1} photos</div>
@@ -73,10 +78,25 @@ function DetailScr({product:p,onBack,onAddCart,go,favs,toggleFav,isFav}){
 
         {/* Price */}
         <div className="det-price">
-          <span className="dp">{fmt(p.price)}</span>
-          {p.old&&<span className="dpo">{fmt(p.old)}</span>}
-          {disc(p)>0&&<span style={{fontSize:12,color:"#10B981",fontWeight:700,marginLeft:8}}>Économisez {fmt(p.old-p.price)}</span>}
+          {vp?<>
+            <span className="dp" style={{color:"#10B981"}}>{fmt(vp.promoPrice)}</span>
+            <span className="dpo">{fmt(p.price)}</span>
+            <span style={{fontSize:12,color:"#10B981",fontWeight:700,marginLeft:8}}>-{vp.promoDiscount}%</span>
+          </>:<>
+            <span className="dp">{fmt(p.price)}</span>
+            {p.old&&<span className="dpo">{fmt(p.old)}</span>}
+            {disc(p)>0&&<span style={{fontSize:12,color:"#10B981",fontWeight:700,marginLeft:8}}>Économisez {fmt(p.old-p.price)}</span>}
+          </>}
         </div>
+
+        {/* Vendor promo banner */}
+        {vp&&<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"rgba(16,185,129,0.06)",borderRadius:12,marginBottom:16,border:"1px solid rgba(16,185,129,0.12)"}}>
+          <span style={{fontSize:20}}>🏷️</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#10B981"}}>{vp.promoName}</div>
+            <div style={{fontSize:11,color:"#908C82"}}>-{vp.promoDiscount}% appliqué automatiquement · Jusqu'au {vp.promoEnds}</div>
+          </div>
+        </div>}
 
         {/* Tags */}
         {p.tags.length>0&&<div className="det-tags">{p.tags.map(t=><span key={t}>{t}</span>)}</div>}
@@ -177,7 +197,7 @@ function DetailScr({product:p,onBack,onAddCart,go,favs,toggleFav,isFav}){
         <span>{qty}</span>
         <button onClick={()=>setQty(qty+1)}>+</button>
       </div>
-      <button className="add-btn" onClick={()=>onAddCart(p,qty)}>🛍️ Ajouter · {fmt(p.price*qty)}</button>
+      <button className="add-btn" onClick={()=>onAddCart(p,qty)}>🛍️ Ajouter · {fmt(finalPrice*qty)}</button>
     </div>
   </>);
 }

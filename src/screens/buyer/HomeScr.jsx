@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Img from "../../components/Img";
 import { useData } from "../../hooks";
-import { fmt, disc } from "../../utils/helpers";
+import { fmt, disc, getVendorPromo, totalDisc, effectivePrice } from "../../utils/helpers";
 
 function HomeScr({go,favs,toggleFav,isFav}){
   const { P, VENDORS, CATS } = useData();
@@ -94,8 +94,10 @@ function HomeScr({go,favs,toggleFav,isFav}){
         <div style={{marginBottom:24}}>
           <h3 style={{fontSize:17,fontWeight:700,letterSpacing:-.3,color:"#191815",paddingBottom:12}}>Catégories populaires</h3>
           <div style={{background:"#fff",borderRadius:18,overflow:"hidden",boxShadow:"0 2px 10px rgba(0,0,0,.04)"}}>
-            {CATS.map((c,i)=><div key={c.id} onClick={()=>doSearch(c.name)} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",cursor:"pointer",borderBottom:i<CATS.length-1?"1px solid #F5F4F1":"none",transition:"background .12s"}}>
-              <div style={{width:42,height:42,borderRadius:12,background:"#F5F4F1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{c.icon}</div>
+            {CATS.map((c,i)=><div key={c.id} onClick={()=>doSearch(c.name)} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",cursor:"pointer",borderBottom:i<CATS.length-1?"1px solid #F5F4F1":"none",transition:"background .12s"}}>
+              <div style={{width:48,height:48,borderRadius:12,overflow:"hidden",flexShrink:0,background:"#E8E6E1"}}>
+                {c.photo?<img src={c.photo} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>{c.icon}</div>}
+              </div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:15,fontWeight:600,color:"#191815"}}>{c.name}</div>
                 <div style={{fontSize:12,color:"#908C82",marginTop:2}}>{c.count} articles</div>
@@ -144,13 +146,33 @@ function HomeScr({go,favs,toggleFav,isFav}){
       </>}
 
       <div className="sec"><h3>Catégories</h3><span onClick={()=>go("cats")}>Voir tout</span></div>
-      <div className="marquee-wrap"><div className="marquee-track">{[...CATS.filter(c=>selType==="all"||c.type===selType).slice(0,8),...CATS.filter(c=>selType==="all"||c.type===selType).slice(0,8)].map((c,i)=><div key={c.id+"-"+i} className={`cat ${i%CATS.length===selCat?"on":""}`} onClick={()=>setSC(i%CATS.length)} style={{position:"relative",overflow:"hidden"}}>{c.photo?<img src={c.photo} alt={c.name} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",borderRadius:14,opacity:.25}}/>:null}<span className="ci" style={{position:"relative",zIndex:1}}>{c.icon}</span><span className="cn" style={{position:"relative",zIndex:1}}>{c.name}</span></div>)}</div></div>
+      <div className="marquee-wrap"><div className="marquee-track" style={{gap:10}}>
+        {[...CATS.filter(c=>selType==="all"||c.type===selType).slice(0,8),...CATS.filter(c=>selType==="all"||c.type===selType).slice(0,8)].map((c,i)=>{
+          const idx=i%CATS.length;
+          return(<div key={c.id+"-"+i} onClick={()=>{setSC(idx);doSearch(c.name)}} style={{
+            flexShrink:0,width:110,borderRadius:16,overflow:"hidden",cursor:"pointer",
+            border:idx===selCat?"2px solid #6366F1":"1px solid #E8E6E1",
+            background:"#fff",transition:"border .2s",
+          }}>
+            <div style={{width:"100%",height:80,position:"relative",overflow:"hidden",background:"#E8E6E1"}}>
+              {c.photo&&<img src={c.photo} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>}
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(transparent 40%,rgba(0,0,0,0.4))"}}/>
+              <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"4px 8px",textAlign:"center"}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#fff",textShadow:"0 1px 3px rgba(0,0,0,.5)"}}>{c.name}</div>
+              </div>
+            </div>
+            <div style={{padding:"5px 8px",textAlign:"center"}}>
+              <div style={{fontSize:10,color:idx===selCat?"#6366F1":"#908C82",fontWeight:600}}>{c.count} articles</div>
+            </div>
+          </div>);
+        })}
+      </div></div>
 
       <div className="sec"><h3>{selType==="all"?"Établissements proches":types.find(t=>t.id===selType)?.name+" proches"}</h3><span onClick={()=>go("nearby")}>Voir la carte</span></div>
       <div className="vlist">{filteredV.slice(0,4).map(v=><div key={v.id} className="vcard" onClick={()=>go("vendor",v)}><div className="vav" style={v.logo?{overflow:"hidden",padding:0}:{}}>{v.logo?<img src={v.logo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:v.avatar}</div><div className="vi"><h4>{v.name}{v.verified&&<span className="vf">✓</span>}</h4><div className="vloc">📍 {v.loc}{v.eta&&<span style={{marginLeft:8,color:"#10B981",fontWeight:600}}>🕐 {v.eta}</span>}</div><div className="vst">⭐ <b>{v.rating}</b> · {v.products} {v.type==="restaurant"?"plats":v.type==="service"?"services":"produits"}</div></div><span style={{color:"#908C82"}}>›</span></div>)}</div>
 
       <div className="sec"><h3>{selType==="all"?"Populaires":"Populaires en "+types.find(t=>t.id===selType)?.name}</h3><span onClick={()=>go("allProducts")}>Voir tout</span></div>
-      <div className="pgrid">{filteredP.map(p=><div key={p.id} className="pcard" onClick={()=>go("detail",p)}><div className="pimg"><Img src={p.photo} emoji={p.img} style={{width:"100%",height:"100%"}} fit="cover"/>{disc(p)>0&&<span className="badge">-{disc(p)}%</span>}{p.tags[0]&&<span className="tag">{p.tags[0]}</span>}<span className="fav" onClick={e=>{e.stopPropagation();toggleFav(p.id)}} style={{color:isFav(p.id)?"#EF4444":"inherit",fontSize:isFav(p.id)?16:14}}>{isFav(p.id)?"❤️":"♡"}</span></div><div className="pbody"><h4>{p.name}</h4><div className="pv">{p.va} {p.vendor}{p.eta&&<span style={{marginLeft:4,color:"#10B981",fontSize:10}}>🕐 {p.eta}</span>}</div><div className="pp">{fmt(p.price)}{p.old&&<span className="po">{fmt(p.old)}</span>}</div><div className="pr" onClick={e=>{e.stopPropagation();go("reviews",p)}}>⭐ {p.rating} ({p.reviews})</div></div></div>)}</div>
+      <div className="pgrid">{filteredP.map(p=>{const vp=getVendorPromo(p,VENDORS);const td=totalDisc(p,VENDORS);return(<div key={p.id} className="pcard" onClick={()=>go("detail",p)}><div className="pimg"><Img src={p.photo} emoji={p.img} style={{width:"100%",height:"100%"}} fit="cover"/>{td>0&&<span className="badge">-{td}%</span>}{vp&&<span className="tag" style={{background:"#10B981",color:"#fff"}}>🏷️ {vp.promoName}</span>}{!vp&&p.tags[0]&&<span className="tag">{p.tags[0]}</span>}<span className="fav" onClick={e=>{e.stopPropagation();toggleFav(p.id)}} style={{color:isFav(p.id)?"#EF4444":"inherit",fontSize:isFav(p.id)?16:14}}>{isFav(p.id)?"❤️":"♡"}</span></div><div className="pbody"><h4>{p.name}</h4><div className="pv">{p.va} {p.vendor}{p.eta&&<span style={{marginLeft:4,color:"#10B981",fontSize:10}}>🕐 {p.eta}</span>}</div><div className="pp">{vp?<><span style={{color:"#10B981"}}>{fmt(vp.promoPrice)}</span><span className="po">{fmt(p.price)}</span></>:<>{fmt(p.price)}{p.old&&<span className="po">{fmt(p.old)}</span>}</>}</div><div className="pr" onClick={e=>{e.stopPropagation();go("reviews",p)}}>⭐ {p.rating} ({p.reviews})</div></div></div>)})}</div>
       </>}
     </div>
   );

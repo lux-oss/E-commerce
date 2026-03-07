@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useLoad } from "../../hooks";
+import { useLoad, useData } from "../../hooks";
 import { user as userSvc } from "../../services";
-import { fmt } from "../../utils/helpers";
+import { fmt, getVendorPromo } from "../../utils/helpers";
 import Loading from "../../components/Loading";
 
 function CouponsScr({onBack,cart=[],appliedCoupon,onApply}){
@@ -9,9 +9,11 @@ function CouponsScr({onBack,cart=[],appliedCoupon,onApply}){
   const [error,setError]=useState("");
   const [verifying,setVerifying]=useState(null);
   const { data: COUPONS, loading } = useLoad(() => userSvc.getCoupons());
+  const { VENDORS } = useData();
 
   const getItem=(c)=>c.product||c;
-  const subtotal=cart.reduce((s,c)=>{const p=getItem(c);return s+(p.price||0)*(c.qty||1)},0);
+  const getPrice=(c)=>{const p=getItem(c);const vp=getVendorPromo(p,VENDORS);return vp?vp.promoPrice:(p.price||0)};
+  const subtotal=cart.reduce((s,c)=>s+getPrice(c)*(c.qty||1),0);
 
   const applyCoupon=async(coupon)=>{
     setError("");setVerifying(coupon.code);

@@ -1,9 +1,12 @@
-import { fmt } from "../../utils/helpers";
+import { fmt, getVendorPromo } from "../../utils/helpers";
 import Img from "../../components/Img";
+import { useData } from "../../hooks";
 
 function CartScr({cart,setCart,go,appliedCoupon,setAppliedCoupon}){
+  const { VENDORS } = useData();
   const getItem=(c)=>c.product||c;
-  const sub=cart.reduce((s,c)=>{const p=getItem(c);return s+(p.price||0)*(c.qty||1)},0);
+  const getPrice=(c)=>{const p=getItem(c);const vp=getVendorPromo(p,VENDORS);return vp?vp.promoPrice:(p.price||0)};
+  const sub=cart.reduce((s,c)=>s+getPrice(c)*(c.qty||1),0);
   const del=2500;
 
   // Calculate discount
@@ -17,14 +20,14 @@ function CartScr({cart,setCart,go,appliedCoupon,setAppliedCoupon}){
   return(<><div className="scr" style={{padding:20}}>
     <div className="appbar" style={{padding:0,marginBottom:16}}><h2>Panier ({cart.length})</h2></div>
     {cart.length===0?<div style={{textAlign:"center",padding:"60px 0"}}><div style={{fontSize:56}}>🛒</div><h3 style={{marginTop:14,fontSize:18,fontWeight:700}}>Votre panier est vide</h3><p style={{fontSize:13,color:"#908C82",marginTop:6}}>Découvrez nos produits</p></div>
-    :cart.map((c,i)=>{const p=getItem(c);return(
+    :cart.map((c,i)=>{const p=getItem(c);const vp=getVendorPromo(p,VENDORS);const price=vp?vp.promoPrice:(p.price||0);return(
       <div key={i} className="cart-item">
         <div className="cart-img"><Img src={p.photo} emoji={p.img} style={{width:"100%",height:"100%",borderRadius:12}} fit="cover"/></div>
         <div className="cart-info">
           <h4>{p.name}</h4>
-          <div className="cv">{p.vendor||""}</div>
+          <div className="cv">{p.vendor||""}{vp&&<span style={{marginLeft:6,fontSize:10,color:"#10B981",fontWeight:600}}>🏷️ -{vp.promoDiscount}%</span>}</div>
           <div className="cart-bot">
-            <span className="cp">{fmt((p.price||0)*(c.qty||1))}</span>
+            <span className="cp">{fmt(price*(c.qty||1))}{vp&&<span style={{marginLeft:4,fontSize:10,color:"#908C82",textDecoration:"line-through"}}>{fmt(p.price*(c.qty||1))}</span>}</span>
             <div className="qty"><button onClick={()=>updQty(i,-1)}>−</button><span>{c.qty||1}</span><button onClick={()=>updQty(i,1)}>+</button></div>
           </div>
         </div>
